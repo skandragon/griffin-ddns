@@ -3,6 +3,8 @@ package dns
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHeaderMarshal(t *testing.T) {
@@ -115,22 +117,112 @@ func TestHeaderUnmarshal(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		wantHeader *Header
+		wantHeader Header
 		want       int
 		wantErr    bool
 	}{
-		// TODO: Add test cases.
+		{
+			"all zeros",
+			args{[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			Header{},
+			12,
+			false,
+		},
+		{
+			"ID set",
+			args{[]byte{0x12, 0x34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			Header{ID: 0x1234},
+			12,
+			false,
+		},
+		{
+			"QR set",
+			args{[]byte{0, 0, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			Header{QR: true},
+			12,
+			false,
+		},
+		{
+			"Opcode set",
+			args{[]byte{0, 0, 0x78, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			Header{Opcode: 0x0f},
+			12,
+			false,
+		},
+		{
+			"AA set",
+			args{[]byte{0, 0, 0x04, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			Header{AA: true},
+			12,
+			false,
+		},
+		{
+			"TC set",
+			args{[]byte{0, 0, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			Header{TC: true},
+			12,
+			false,
+		},
+		{
+			"RD set",
+			args{[]byte{0, 0, 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			Header{RD: true},
+			12,
+			false,
+		},
+		{
+			"RA set",
+			args{[]byte{0, 0, 0, 0x80, 0, 0, 0, 0, 0, 0, 0, 0}},
+			Header{RA: true},
+			12,
+			false,
+		},
+		{
+			"RCode set",
+			args{[]byte{0, 0, 0, 0x0f, 0, 0, 0, 0, 0, 0, 0, 0}},
+			Header{RCode: 0x0f},
+			12,
+			false,
+		},
+		{
+			"QDCount set",
+			args{[]byte{0, 0, 0, 0, 0x12, 0x34, 0, 0, 0, 0, 0, 0}},
+			Header{QDCount: 0x1234},
+			12,
+			false,
+		},
+		{
+			"ANCount set",
+			args{[]byte{0, 0, 0, 0, 0, 0, 0x12, 0x34, 0, 0, 0, 0}},
+			Header{ANCount: 0x1234},
+			12,
+			false,
+		},
+		{
+			"NSCount set",
+			args{[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0x12, 0x34, 0, 0}},
+			Header{NSCount: 0x1234},
+			12,
+			false,
+		},
+		{
+			"ARCount set",
+			args{[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x12, 0x34}},
+			Header{ARCount: 0x1234},
+			12,
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := HeaderUnmarshal(tt.args.h, tt.args.data)
+			var gotHeader Header
+			got, err := HeaderUnmarshal(&gotHeader, tt.args.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("HeaderUnmarshal() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("HeaderUnmarshal() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.wantHeader, gotHeader)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

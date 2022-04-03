@@ -72,5 +72,18 @@ func HeaderMarshal(h *Header) ([]byte, error) {
 
 // HeaderUnmarshal will unmarshal the DNS header, and return the number of bytes consumed.
 func HeaderUnmarshal(h *Header, data []byte) (int, error) {
-	return 0, nil
+	h.ID = uint16(data[0])<<8 + uint16(data[1])
+	h.QR = data[2]&0x80 != 0
+	h.Opcode = data[2] & 0x78 >> 3
+	h.AA = data[2]&0x04 != 0
+	h.TC = data[2]&0x02 != 0
+	h.RD = data[2]&0x01 != 0
+	h.RA = data[3]&0x80 != 0
+	h.RCode = data[3] & 0x0f
+	h.QDCount = uint16(data[4])<<8 + uint16(data[5])
+	h.ANCount = uint16(data[6])<<8 + uint16(data[7])
+	h.NSCount = uint16(data[8])<<8 + uint16(data[9])
+	h.ARCount = uint16(data[10])<<8 + uint16(data[11])
+
+	return 12, nil
 }
